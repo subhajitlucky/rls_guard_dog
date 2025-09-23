@@ -42,6 +42,20 @@ interface SchoolAnalytics {
   last_updated: string
 }
 
+// Internal accumulator types to ensure maps are strongly typed
+type SubjectStats = { total: number; count: number }
+interface SchoolAccumulator {
+  school_id: string
+  school_name: string
+  students: Set<string>
+  teachers: Set<string>
+  classrooms: Set<string>
+  totalScore: number
+  totalRecords: number
+  subjects: Map<string, SubjectStats>
+  grades: Map<string, SubjectStats>
+}
+
 export async function POST() {
   try {
     console.log('🚀 Starting analytics calculation...')
@@ -94,8 +108,8 @@ export async function POST() {
     console.log(`� Processing ${progressData?.length || 0} progress records...`)
 
     // Calculate class averages
-    const classAverages = new Map<string, ClassAverage>()
-    const schoolStats = new Map<string, any>()
+  const classAverages = new Map<string, ClassAverage>()
+  const schoolStats = new Map<string, SchoolAccumulator>()
 
     for (const progress of progressData || []) {
       const classroom = progress.classrooms
@@ -145,13 +159,13 @@ export async function POST() {
         schoolStats.set(schoolId, {
           school_id: schoolId,
           school_name: classroom.schools?.name || 'Unknown',
-          students: new Set(),
-          teachers: new Set(),
-          classrooms: new Set(),
+          students: new Set<string>(),
+          teachers: new Set<string>(),
+          classrooms: new Set<string>(),
           totalScore: 0,
           totalRecords: 0,
-          subjects: new Map(),
-          grades: new Map()
+          subjects: new Map<string, SubjectStats>(),
+          grades: new Map<string, SubjectStats>()
         })
       }
 

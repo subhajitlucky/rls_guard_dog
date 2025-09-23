@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 export async function createClient() {
@@ -24,4 +25,22 @@ export async function createClient() {
       },
     }
   )
+}
+
+// Create a Supabase client that authenticates all requests with the provided JWT via Authorization header.
+// Useful for API routes that accept `Authorization: Bearer <token>` for testing/scripts.
+export function createBearerClient(token: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  return createSupabaseClient(url, anon, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  })
 }

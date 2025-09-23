@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createBearerClient } from '@/lib/supabase/server';
 
 interface CreateProgressRequest {
   student_id: string;
@@ -14,9 +14,11 @@ interface UpdateProgressRequest {
   subject?: string;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const authz = request.headers.get('authorization') || ''
+    const token = authz.toLowerCase().startsWith('bearer ') ? authz.slice(7) : null
+    const supabase = token ? createBearerClient(token) : await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -75,7 +77,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const authz = request.headers.get('authorization') || ''
+    const token = authz.toLowerCase().startsWith('bearer ') ? authz.slice(7) : null
+    const supabase = token ? createBearerClient(token) : await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -158,7 +162,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const authz = request.headers.get('authorization') || ''
+    const token = authz.toLowerCase().startsWith('bearer ') ? authz.slice(7) : null
+    const supabase = token ? createBearerClient(token) : await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {

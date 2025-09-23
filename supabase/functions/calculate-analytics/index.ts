@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const mongodbUri = Deno.env.get('MONGODB_URI')!
+const mongodbDbName = Deno.env.get('MONGODB_DATABASE') || 'rls_guard_dog'
 
 import { MongoClient } from "https://deno.land/x/mongo@v0.32.0/mod.ts"
 
@@ -53,8 +54,45 @@ Deno.serve(async (_req) => {
 
     // Initialize MongoDB client
     const client = new MongoClient()
-    await client.connect(mongodbUri)
-    const db = client.database("rls_guard_dog")
+    // Ensure authSource is present to avoid Atlas auth edge-cases
+    let finalMongoUri = mongodbUri
+    try {
+      const url = new URL(mongodbUri)
+      if (!url.searchParams.has('authSource')) {
+        url.searchParams.set('authSource', 'admin')
+      }
+      finalMongoUri = url.toString()
+    } catch (_) {
+      finalMongoUri = mongodbUri
+    }
+
+    // Diagnostics: if using mongodb+srv, try to resolve SRV/A records to aid debugging
+    try {
+      const u = new URL(finalMongoUri)
+      if (u.protocol === 'mongodb+srv:') {
+        console.log('🔎 DNS: resolving SRV records for', u.hostname)
+        // deno-lint-ignore no-explicit-any
+        const srv: any = await (Deno as any).resolveDns(`_mongodb._tcp.${u.hostname}`, 'SRV')
+        console.log('🔎 DNS SRV results count:', Array.isArray(srv) ? srv.length : 0)
+        if (Array.isArray(srv) && srv.length > 0 && srv[0].target) {
+          // deno-lint-ignore no-explicit-any
+          const arec: any = await (Deno as any).resolveDns(srv[0].target, 'A')
+          console.log('🔎 DNS A records for first SRV target count:', Array.isArray(arec) ? arec.length : 0)
+        }
+      }
+    } catch (e) {
+      console.log('ℹ️ DNS diagnostics skipped/failed:', e instanceof Error ? e.message : String(e))
+    }
+    try {
+      await client.connect(finalMongoUri)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      if (message.toLowerCase().includes('bad auth') || message.toLowerCase().includes('authentication failed')) {
+        throw new Error('MongoDB authentication failed. Verify MONGODB_URI credentials and authSource, and ensure the user has access. If using Atlas, confirm the database user/password and rotate if unsure.')
+      }
+      throw err
+    }
+    const db = client.database(mongodbDbName)
 
     // Get all progress data with related information
     const { data: progressData, error: progressError } = await supabase
