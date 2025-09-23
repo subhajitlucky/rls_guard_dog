@@ -99,12 +99,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body: CreateProgressRequest = await request.json();
-    const { student_id, subject, score, classroom_id } = body;
+  const body: CreateProgressRequest = await request.json();
+  const { student_id, subject, score, classroom_id } = body;
 
     if (!student_id || !subject || score === undefined || !classroom_id) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Determine school_id from classroom
+    const { data: classroom, error: classroomError } = await supabase
+      .from('classrooms')
+      .select('id, school_id, teacher_id')
+      .eq('id', classroom_id)
+      .single()
+
+    if (classroomError || !classroom) {
+      return NextResponse.json(
+        { error: 'Classroom not found' },
         { status: 400 }
       );
     }
@@ -117,6 +131,7 @@ export async function POST(request: NextRequest) {
         subject,
         score,
         classroom_id,
+        school_id: classroom.school_id,
       })
       .select()
       .single();

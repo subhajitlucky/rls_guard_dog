@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { email, password, full_name, school_name, role } = await request.json();
+  const supabase = await createClient();
+  const admin = createAdminClient();
+  const { email, password, full_name, school_name, role } = await request.json();
 
     // Validate role
     if (!['student', 'teacher', 'head_teacher'].includes(role)) {
@@ -12,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email,
       password,
       email_confirm: true
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
     
     if (role === 'head_teacher') {
       // Check if school already exists
-      const { data: existingSchool } = await supabase
+      const { data: existingSchool } = await admin
         .from('schools')
         .select('*')
         .eq('name', school_name)
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Create new school
-      const { data: newSchool, error: schoolError } = await supabase
+      const { data: newSchool, error: schoolError } = await admin
         .from('schools')
         .insert({ name: school_name })
         .select()
@@ -52,7 +54,7 @@ export async function POST(request: NextRequest) {
       schoolData = newSchool;
     } else {
       // For student/teacher, school must exist
-      const { data: existingSchool, error: schoolError } = await supabase
+      const { data: existingSchool, error: schoolError } = await admin
         .from('schools')
         .select('*')
         .eq('name', school_name)
@@ -69,13 +71,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Create profile in the profiles table
-    const { error: profileError } = await supabase
+    const { error: profileError } = await admin
       .from('profiles')
       .insert({
         id: userId,
         full_name,
         role,
-        school_id: schoolData.id
+        school_id: schoolData.id,
+        email
       });
 
     if (profileError) {
