@@ -12,6 +12,8 @@ CREATE TABLE profiles (
   role TEXT CHECK (role IN ('student', 'teacher', 'head_teacher')) NOT NULL,
   full_name TEXT,
   email TEXT,
+  grade TEXT, -- "10th", "11th", "12th", etc.
+  subjects TEXT[], -- Array for students: ["Math", "Science", "AI"] or single for teachers: ["Math"]
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

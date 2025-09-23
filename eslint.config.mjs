@@ -18,7 +18,25 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "supabase/functions/**", // Ignore Deno Edge Functions
     ],
+  },
+  // Rules for test files
+  {
+    files: ["*.js", "test-*.js", "debug-*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-unused-vars": "warn",
+    },
+  },
+  // Rules for TypeScript files
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "error",
+      "prefer-const": "error",
+      "@typescript-eslint/no-unused-vars": "error",
+    },
   },
 ];
 

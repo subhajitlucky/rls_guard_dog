@@ -1,36 +1,291 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛡️ RLS Guard Dog
 
-## Getting Started
+**Secure Classroom Management with Row-Level Security**
 
-First, run the development server:
+A Next.js application demonstrating advanced PostgreSQL Row-Level Security (RLS) with Supabase, featuring role-based access control for educational institutions.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🎯 Core Requirements
+
+> **Task**: Create classroom and progress tables linked by school_id, with row-level security that lets students see only their own records, teachers see every record in their classes, and the head teacher see all records in the school. Build a protected /teacher page in Next.js for editing progress. Add an Edge Function that calculates class averages and saves them to MongoDB.
+
+## 🏗️ Architecture
+
+### **Database Schema**
+```sql
+-- Schools table
+CREATE TABLE schools (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Profiles table (extends Supabase auth.users)
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  email TEXT UNIQUE NOT NULL,
+  full_name TEXT,
+  role TEXT CHECK (role IN ('student', 'teacher', 'head_teacher')),
+  school_id UUID REFERENCES schools(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Classrooms table
+CREATE TABLE classrooms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  teacher_id UUID REFERENCES profiles(id),
+  school_id UUID REFERENCES schools(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Progress table
+CREATE TABLE progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID REFERENCES profiles(id),
+  classroom_id UUID REFERENCES classrooms(id),
+  score INTEGER CHECK (score >= 0 AND score <= 100),
+  notes TEXT,
+  recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### **Row-Level Security Policies**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+#### **Students**: See only their own progress
+```sql
+CREATE POLICY "Students can view own progress" ON progress
+FOR SELECT USING (
+  student_id = auth.uid() AND 
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'student')
+);
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### **Teachers**: See students in their classes
+```sql
+CREATE POLICY "Teachers can view class progress" ON progress
+FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM classrooms c
+    JOIN profiles p ON p.id = auth.uid()
+    WHERE c.id = classroom_id 
+    AND c.teacher_id = auth.uid()
+    AND p.role = 'teacher'
+  )
+);
+```
 
-## Learn More
+#### **Head Teachers**: See all school records
+```sql
+CREATE POLICY "Head teachers can view school progress" ON progress
+FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM classrooms c
+    JOIN profiles p ON p.id = auth.uid()
+    WHERE c.id = classroom_id 
+    AND c.school_id = p.school_id
+    AND p.role = 'head_teacher'
+  )
+);
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### ✅ **Phase 1: Database & RLS**
+- PostgreSQL database with proper relationships
+- Row-Level Security policies for data isolation
+- Role-based access control (students, teachers, head_teachers)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### ✅ **Phase 2: Authentication**
+- Supabase Auth integration
+- Role-based user registration and login
+- Protected routes based on user roles
 
-## Deploy on Vercel
+### ✅ **Phase 3: Teacher Management**
+- Protected `/teacher` page for progress editing
+- Form validation and error handling
+- Real-time updates with Supabase subscriptions
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### ✅ **Phase 4: Analytics & MongoDB**
+- Edge Function for calculating class averages
+- MongoDB integration for analytics storage
+- API endpoints for data retrieval
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔧 Tech Stack
+
+- **Frontend**: Next.js 15 + TypeScript + Tailwind CSS
+- **Database**: Supabase (PostgreSQL with RLS)
+- **Analytics**: MongoDB Atlas
+- **Deployment**: Vercel + Supabase Edge Functions
+- **Authentication**: Supabase Auth
+
+## 📦 Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd rls_guard_dog
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   Create `.env.local`:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   MONGODB_URI=your_mongodb_connection_string
+   ```
+
+4. **Database Setup**
+   ```bash
+   # Run database migrations
+   psql -f database/schema.sql
+   psql -f database/rls_policies.sql
+   ```
+
+5. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+
+## 🚀 Deployment
+
+### **Live Demo**
+- **Live URL**: `https://your-app.vercel.app` (Deploy to get URL)
+- **Repository**: `https://github.com/subhajitlucky/rls_guard_dog`
+
+### **Environment Variables**
+For deployment, set these environment variables in your hosting platform:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key  
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+MONGODB_URI=your_mongodb_connection_string
+MONGODB_DATABASE=rls_guard_dog
+NEXT_PUBLIC_SITE_URL=https://your-deployed-url.com
+```
+
+### **Deploy to Vercel**
+1. Fork this repository
+2. Connect to Vercel
+3. Add environment variables
+4. Deploy automatically
+
+## 🧪 Testing
+
+### **Database & RLS Testing**
+```bash
+node check-rls.js
+```
+
+### **MongoDB Analytics Testing**
+```bash
+node test-mongodb.js
+node push-analytics.js
+```
+
+## 📊 Edge Function API
+
+### **Calculate Class Averages**
+```bash
+# Endpoint
+POST /api/calculate-analytics
+
+# Response
+{
+  "success": true,
+  "data": {
+    "classAveragesCalculated": 11,
+    "schoolAnalyticsCalculated": 5,
+    "totalProgressRecords": 27
+  }
+}
+```
+
+### **Retrieve Analytics**
+```bash
+# Class Averages
+GET /api/analytics?type=class_averages
+
+# School Analytics  
+GET /api/analytics?type=school_analytics
+
+# Filtered by School
+GET /api/analytics?type=class_averages&school_id=<uuid>
+
+# Filtered by Teacher
+GET /api/analytics?type=class_averages&teacher_id=<uuid>
+```
+
+## 👥 Test Users
+
+### **Head Teacher** (Full School Access)
+```
+Email: margaret.williams@school.edu
+Password: password123
+Role: head_teacher
+School: Lincoln High School
+```
+
+### **Teacher** (Class Access)
+```
+Email: smith@test.com
+Password: password123
+Role: teacher
+School: CUTM
+```
+
+### **Student** (Own Records Only)
+```
+Email: emma@test.com
+Password: password123
+Role: student
+School: CUTM
+```
+
+## 📈 Live Analytics Data
+
+**Current System Performance:**
+- **27 progress records** processed
+- **11 classrooms** with calculated averages
+- **5 schools** with analytics
+- **26 users** across all roles
+
+**Sample Results:**
+- Lincoln High School: 88% overall average
+- Tokyo Academy: 84.83% overall average
+- CUTM: 81.86% overall average
+
+## 🔒 Security Features
+
+- **Row-Level Security**: Database-level access control
+- **Role-Based Authentication**: Supabase Auth with custom roles
+- **Protected Routes**: Server-side authentication checks
+- **Input Validation**: Comprehensive form and API validation
+- **Error Boundaries**: Graceful error handling
+
+## 📝 API Documentation
+
+The Edge Function calculates class averages from Supabase progress data and stores results in MongoDB. No UI required - pure backend functionality as requested.
+
+**Core Function**: Fetches progress records → Calculates averages → Stores in MongoDB
+
+## 🚀 Deployment
+
+1. **Supabase**: Database and Edge Functions
+2. **Vercel**: Next.js application hosting
+3. **MongoDB Atlas**: Analytics data storage
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
+
+---
+
+Built with ❤️ for secure educational data management

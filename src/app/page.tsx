@@ -1,103 +1,112 @@
-import Image from "next/image";
+import Link from 'next/link'
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="max-w-6xl mx-auto px-4 py-16">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+            🛡️ RLS Guard Dog
+          </h1>
+          <p className="text-xl text-gray-600 mb-8">
+            Secure Classroom Management with Row-Level Security
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Link
+              href="/login"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              Login
+            </Link>
+            <Link
+              href="/signup"
+              className="px-6 py-3 border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+            >
+              Sign Up
+            </Link>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Features */}
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+            <div className="text-3xl mb-4">👨‍🎓</div>
+            <h3 className="text-lg font-semibold mb-2">Student Dashboard</h3>
+            <p className="text-gray-600">
+              Students can view only their own progress records with automatic RLS filtering
+            </p>
+          </div>
+          <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+            <div className="text-3xl mb-4">👨‍🏫</div>
+            <h3 className="text-lg font-semibold mb-2">Teacher Management</h3>
+            <p className="text-gray-600">
+              Teachers manage students in their grade/subjects and edit progress records
+            </p>
+          </div>
+          <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+            <div className="text-3xl mb-4">👩‍💼</div>
+            <h3 className="text-lg font-semibold mb-2">School Analytics</h3>
+            <p className="text-gray-600">
+              Head teachers access school-wide analytics with MongoDB integration
+            </p>
+          </div>
+        </div>
+
+        {/* Technology Stack */}
+        <div className="bg-white rounded-lg shadow-sm p-8 mb-16">
+          <h2 className="text-2xl font-bold text-center mb-8">Built With</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-2xl mb-2">⚡</div>
+              <h4 className="font-semibold">Next.js 15</h4>
+              <p className="text-sm text-gray-600">App Router + TypeScript</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl mb-2">🔐</div>
+              <h4 className="font-semibold">Supabase</h4>
+              <p className="text-sm text-gray-600">PostgreSQL + RLS</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl mb-2">📊</div>
+              <h4 className="font-semibold">MongoDB</h4>
+              <p className="text-sm text-gray-600">Analytics Storage</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl mb-2">🚀</div>
+              <h4 className="font-semibold">Edge Functions</h4>
+              <p className="text-sm text-gray-600">Serverless Computing</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Assignment Info */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h2 className="text-xl font-bold text-blue-900 mb-4">📋 Assignment Requirements</h2>
+          <div className="grid md:grid-cols-2 gap-4 text-sm text-blue-800">
+            <div>
+              <h4 className="font-semibold mb-2">✅ Database & Security:</h4>
+              <ul className="space-y-1 list-disc list-inside">
+                <li>Classroom and progress tables linked by school_id</li>
+                <li>Row-level security policies implemented</li>
+                <li>Students see only their own records</li>
+                <li>Teachers see students in their classes</li>
+                <li>Head teachers see all school records</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">✅ Features & Integration:</h4>
+              <ul className="space-y-1 list-disc list-inside">
+                <li>Protected /teacher page for editing progress</li>
+                <li>Role-based authentication system</li>
+                <li>Edge Function calculates class averages</li>
+                <li>MongoDB integration for analytics</li>
+                <li>Comprehensive testing and deployment</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
